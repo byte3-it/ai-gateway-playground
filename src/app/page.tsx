@@ -1,103 +1,145 @@
-import Image from "next/image";
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AVAILABLE_MODELS } from "@/lib/constants";
+import { cn } from "@/lib/utils";
+import { useMutation } from "@tanstack/react-query";
+import { Loader2, Send } from "lucide-react";
+import { useState, useEffect } from "react";
+import { toast } from "react-hot-toast";
+
+const DEFAULT_MESSAGES = [{ role: "assistant", content: "Hello, I'm a helpful assistant. How can I help you today?" }];
+
+const LOCAL_STORAGE_KEY = "chat-messages";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [selecteModel, setSelecteModel] = useState(AVAILABLE_MODELS[0].id);
+  const [prompt, setPrompt] = useState("Hello, tell me a joke about AI");
+  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Load messages from localStorage on component mount
+  useEffect(() => {
+    const savedMessages = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (savedMessages) {
+      try {
+        const parsedMessages = JSON.parse(savedMessages);
+        setMessages(parsedMessages);
+        setPrompt("");
+      } catch (error) {
+        console.error("Error parsing saved messages:", error);
+        // Fallback to default message if parsing fails
+        setMessages(DEFAULT_MESSAGES);
+      }
+    } else {
+      // Set default message if no saved messages exist
+      setMessages(DEFAULT_MESSAGES);
+    }
+  }, []);
+
+  // Save messages to localStorage whenever messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(messages));
+    }
+  }, [messages]);
+
+  const submitTextMutation = useMutation({
+    mutationFn: async (): Promise<{ message: string }> => {
+      const messagesToSend = [...messages, { role: "user", content: prompt }];
+
+      setMessages([...messages, { role: "user", content: prompt }]);
+      return await fetch("/api/ai", {
+        method: "POST",
+        body: JSON.stringify({ model: selecteModel, messages: messagesToSend }),
+      }).then((res) => res.json());
+    },
+    onSuccess: (data: { message: string }) => {
+      setMessages((prev) => [...prev, { role: "assistant", content: data.message }]);
+      setPrompt("");
+    },
+    onError: (error) => {
+      console.error(error);
+      toast.error("Error submitting text");
+    },
+  });
+
+  return (
+    <div className="flex flex-col gap-4 p-8 h-screen pb-16">
+      {/* messages */}
+      <div
+        className={cn(
+          "flex-1 overflow-y-auto border border-gray-200 rounded-md p-4",
+          submitTextMutation.isPending && "shadow-lg"
+        )}
+      >
+        {!messages ||
+          (messages.length === 0 && (
+            <div className="flex justify-center items-center h-full">
+              <p className="text-gray-500">No messages yet, send your first message</p>
+            </div>
+          ))}
+
+        <div className="flex flex-col gap-2">
+          {messages &&
+            messages.map((message, index) => (
+              <div key={index} className={cn("flex", message.role === "user" ? "justify-end" : "justify-start")}>
+                <div className="p-2 rounded-md border max-w-2xl bg-white">
+                  <div className="text-sm">{message.content}</div>
+                </div>
+              </div>
+            ))}
+
+          {/* skeleton for last ai message */}
+          {submitTextMutation.isPending && (
+            <div className="flex justify-start">
+              <Skeleton className="h-[60px] w-lg rounded-xl" />
+            </div>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+      </div>
+
+      {/* input area */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          submitTextMutation.mutate();
+        }}
+      >
+        <div className="flex flex-col gap-2">
+          <Input
+            type="text"
+            disabled={submitTextMutation.isPending}
+            placeholder="Enter your message"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <div className="flex gap-2">
+            <Select
+              disabled={submitTextMutation.isPending}
+              value={selecteModel}
+              onValueChange={(value) => setSelecteModel(value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a model" />
+              </SelectTrigger>
+              <SelectContent>
+                {AVAILABLE_MODELS.map((model) => (
+                  <SelectItem key={model.id} value={model.id}>
+                    {model.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button type="submit" disabled={submitTextMutation.isPending}>
+              {submitTextMutation.isPending && <Loader2 className="size-4 animate-spin" />}
+              Send <Send className="size-4" />
+            </Button>
+          </div>
+        </div>
+      </form>
     </div>
   );
 }

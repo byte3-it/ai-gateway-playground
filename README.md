@@ -1,8 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Gateway Playground
 
-## Getting Started
+![AI Gateway Playground Demo](docs/demo_screenshot.png)
 
-First, run the development server:
+An open-source playground for [Vercel AI Gateway](https://vercel.com/ai-gateway) that serves as a starting point for creating an AI-ready platform.
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbyte3-it%2Fai-gateway-playground&env=AI_GATEWAY_API_KEY&envDescription=Vercel%20AI%20Gateway%20api%20key&envLink=https%3A%2F%2Fvercel.com%2Fdocs%2Fai-gateway%2Fgetting-started%23set-up-your-api-key)
+
+## Prerequisites
+
+- Node.js 18+
+- npm, yarn, or pnpm
+- Vercel account with AI Gateway access
+
+## 🚀 Getting Started
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/byte3-it/ai-gateway-playground.git
+cd ai-gateway-playground
+```
+
+### 2. Install Dependencies
+
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+```
+
+### 3. Environment Setup
+
+Create a `.env` file in the root directory:
+
+```bash
+AI_GATEWAY_API_KEY=your_vercel_ai_gateway_api_key_here
+```
+
+**How to get your API key:**
+
+1. Go to [Vercel AI Gateway](https://vercel.com/ai-gateway)
+2. Create a new project or select an existing one
+3. Generate an API key from the dashboard
+4. Copy the key to your `.env` file
+
+### 4. Run the Development Server
 
 ```bash
 npm run dev
@@ -10,27 +54,47 @@ npm run dev
 yarn dev
 # or
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Available Models
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The project comes with some pre-configured AI models. You can view and edit the available models in `src/lib/constants.ts`:
 
-## Learn More
+```typescript
+export const AVAILABLE_MODELS = [
+  {
+    id: "openai/gpt-5-nano",
+    name: "OpenAI GPT-5 Nano",
+  },
+  {
+    id: "xai/grok-4",
+    name: "XAI Grok 4",
+  },
+  {
+    id: "anthropic/claude-3-haiku",
+    name: "Anthropic Claude 3 Haiku",
+  },
+  {
+    id: "google/gemini-embedding-001",
+    name: "Google Gemini Embedding 001",
+  },
+];
+```
 
-To learn more about Next.js, take a look at the following resources:
+To add more models visit [Vercel AI Gateway Models](https://vercel.com/ai-gateway/models) to see all available models
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Tech Stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Framework**: Next.js 15 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: the great [shadcn](https://ui.shadcn.com/) components
+- **State Management**: [React Query](https://tanstack.com/query/v5/docs/framework/react/overview) (TanStack Query)
+- **AI Integration**: Vercel AI SDK
 
-## Deploy on Vercel
+## 📚 Resources
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Vercel AI Gateway Documentation](https://vercel.com/docs/ai-gateway)
+- [Vercel AI SDK Documentation](https://sdk.vercel.ai/)
